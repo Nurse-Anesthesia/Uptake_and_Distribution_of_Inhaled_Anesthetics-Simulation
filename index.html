@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Inhaled Anesthetic Simulations</title>
+<style>
+:root{
+  --bg:#faf7f9; --surface:#ffffff; --surface2:#f4e8ef; --ink:#2b2d42; --muted:#6c6f7d; --line:#e6d4de;
+  --plum:#3d1028; --wine:#5e1a40; --mag:#8e2c5e; --pink:#e6b8cf; --teal:#1f6f78; --gold:#c98a1b; --blue:#3d5a80; --ok:#1d7a4a; --bad:#b4232f;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Segoe UI",Calibri,system-ui,-apple-system,sans-serif}
+header{background:var(--plum);color:#fff;padding:22px 16px 0}
+.wrap{max-width:1160px;margin:0 auto;padding:0 16px}
+header .wrap{padding:0}
+h1{font:700 30px/1.15 Cambria,Georgia,serif;margin:0 0 4px}
+header p{margin:0 0 14px;color:#f1d8e5;max-width:75ch}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav button{font:600 14px/1 inherit;font-family:inherit;border:0;border-radius:10px 10px 0 0;padding:11px 14px;background:#5e2448;color:#f1d8e5;cursor:pointer}
+nav button[aria-selected="true"]{background:var(--bg);color:var(--wine)}
+nav button:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+main{padding:20px 0 50px}
+section.tab{display:none} section.tab.on{display:block}
+h2{font:700 24px/1.2 Cambria,Georgia,serif;color:var(--wine);margin:0 0 6px}
+.lede{color:var(--muted);margin:0 0 16px;max-width:85ch}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:18px;align-items:start}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+@media(max-width:900px){.grid,.grid2{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0}
+.card h3{margin:0 0 8px;font:700 17px/1.2 inherit;color:var(--wine)}
+svg{display:block;width:100%;height:auto;border-radius:10px;background:#fff}
+.controls{display:grid;gap:12px}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+button.b{font:600 14px/1 inherit;font-family:inherit;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:9px;padding:9px 12px;cursor:pointer}
+button.b:hover{border-color:var(--mag)}
+button.b:disabled{opacity:.45;cursor:default}
+button.b.primary{background:var(--wine);border-color:var(--wine);color:#fff}
+button.b.sel{background:var(--surface2);border-color:var(--mag);color:var(--wine)}
+label.chk{display:flex;gap:8px;align-items:flex-start;font-size:15px;cursor:pointer}
+label.chk input{margin-top:4px;accent-color:var(--mag)}
+.slider{display:grid;gap:2px;font-size:14px}
+.slider span{display:flex;justify-content:space-between;gap:8px}
+.slider b{font-variant-numeric:tabular-nums;color:var(--wine)}
+input[type=range]{width:100%;accent-color:var(--mag)}
+select{font:15px inherit;font-family:inherit;padding:8px;border-radius:8px;border:1px solid var(--line);width:100%;background:#fff;color:var(--ink)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:12px}
+.stat{background:var(--surface2);border-radius:10px;padding:8px 10px}
+.stat small{display:block;color:var(--muted);font-size:12px}
+.stat b{font:700 20px/1.2 Cambria,Georgia,serif;color:var(--wine);font-variant-numeric:tabular-nums}
+.stat.abn b{color:var(--bad)} .stat.nrm b{color:var(--ok)}
+.try{background:#eef6f6;border:1px solid #c9e2e4;border-radius:12px;padding:12px 14px;margin-top:16px}
+.try h3{color:var(--teal);margin:0 0 6px;font:700 17px/1.2 inherit}
+.try ol{margin:0;padding-left:20px} .try li{margin:4px 0}
+.note{font-size:13px;color:var(--muted);margin-top:8px}
+.msg{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--surface2);font-size:15px}
+.msg.good{background:#e3f3ea} .msg.badm{background:#fbe4e5}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:13px;color:var(--muted);margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:4px;border-radius:2px;display:inline-block}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:600 14px/1.2 inherit;font-family:inherit;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 12px;cursor:pointer;color:var(--ink)}
+.chip.on{background:var(--wine);color:#fff;border-color:var(--wine)}
+.chip.right{background:#e3f3ea;border-color:var(--ok);color:var(--ok);cursor:default}
+.chip.wrong{background:#fbe4e5;border-color:var(--bad);color:var(--bad)}
+.bins{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+@media(max-width:700px){.bins{grid-template-columns:1fr}}
+.bin{border:2px dashed var(--line);border-radius:12px;padding:10px;min-height:120px;background:#fff;cursor:pointer}
+.bin h4{margin:0 0 6px;font:700 15px/1.2 inherit}
+.bin.dec h4{color:var(--teal)} .bin.inc h4{color:var(--bad)} .bin.none h4{color:var(--muted)}
+.bin.ready{border-color:var(--mag);background:#fdf6fa}
+.bin .chip{margin:3px 3px 0 0}
+.theory{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff}
+.theory h4{margin:0 0 4px;font:700 15px/1.25 inherit;color:var(--wine)}
+.theory p{margin:0;font-size:14px;color:var(--muted)}
+.verdict{margin-top:6px;font-size:14px;font-weight:600;min-height:1.4em}
+.verdict.s{color:var(--ok)} .verdict.c{color:var(--bad)} .verdict.n{color:var(--muted)}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:12px}
+footer{color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:12px;margin-top:24px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;line-height:1.35}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>Inhaled Anesthetic Simulations</h1>
+  <p>NURS 733 · Uptake and Distribution of Inhaled Anesthetics. Five interactive models that match the student teaching topics. Predict what will happen, then run the model and check yourself.</p>
+  <nav role="tablist" id="tabs"></nav>
+</div></header>
+<main class="wrap">
+
+<!-- 1 SOLUBILITY -->
+<section class="tab" id="t-sol" data-title="1 · Solubility & Onset">
+  <h2>Blood:Gas Solubility and Speed of Onset</h2>
+  <p class="lede">Every agent below is run under the same conditions. The only thing that differs is how soluble the agent is in blood (and tissue). Watch how quickly the alveolar concentration (FA) rises toward the inspired concentration (FI). Then turn the vaporizer off and watch emergence.</p>
+  <div class="grid">
+    <div class="card">
+      <h3>Alveolar concentration over time (FA/FI)</h3>
+      <svg id="solChart" viewBox="0 0 720 380" role="img" aria-label="FA over FI versus time for selected agents"></svg>
+      <div class="legend" id="solLegend"></div>
+      <h3 style="margin-top:16px">Blood as a reservoir</h3>
+      <svg id="sponge" viewBox="0 0 720 200" role="img" aria-label="Animation of anesthetic molecules moving from alveolus into blood and brain"></svg>
+      <div class="note">Each dot is anesthetic. Dots that dissolve in blood do not add to partial pressure; only “free” partial pressure drives agent into the brain.</div>
+    </div>
+    <div class="controls">
+      <div class="card">
+        <h3>Agents to compare</h3>
+        <div class="chips" id="solAgents"></div>
+        <div class="slider" style="margin-top:12px"><span>Sponge animation agent</span>
+          <select id="spongeAgent"></select></div>
+        <div class="btnrow">
+          <button class="b primary" id="solRun">Run induction</button>
+          <button class="b" id="solOff">Turn vaporizer off at 30 min</button>
+        </div>
+        <div class="stats" id="solStats"></div>
+      </div>
+      <div class="card quiz" id="q1"></div>
+    </div>
+  </div>
+  <div class="try"><h3>Try this</h3><ol>
+    <li>Compare desflurane and isoflurane. Which reaches FA/FI 0.8 first, and why?</li>
+    <li>Run emergence. Which agent leaves fastest? Which lingers (tissue reservoirs)?</li>
+    <li>Set the sponge to halothane and then desflurane. What is different about how quickly the blood “fills”?</li>
+  </ol></div>
+</section>
+
+<!-- 2 MAC -->
+<section class="tab" id="t-mac" data-title="2 · MAC">
+  <h2>MAC and the Factors That Change It</h2>
+  <p class="lede">Build an anesthetic by combining a volatile agent with nitrous oxide, adjust for age, and see the total MAC and the predicted chance of no movement with incision. Then sort the Box 7.1 factors.</p>
+  <div class="grid">
+    <div class="card">
+      <h3>Dose–response: probability of no movement</h3>
+      <svg id="macChart" viewBox="0 0 720 340" role="img" aria-label="Dose response curve of MAC multiples versus percent not moving"></svg>
+      <div class="stats" id="macStats"></div>
+      <div class="note">MACs are additive (0.5 MAC + 0.5 MAC = 1 MAC). 1 MAC = 50% no movement; 1.3 MAC = 95%. Age adjustment is approximate (peak about 6 months, declining thereafter).</div>
+    </div>
+    <div class="controls card">
+      <div class="slider"><span>Volatile agent</span><select id="macAgent"></select></div>
+      <div class="slider"><span>Volatile end-tidal % <b id="macVolV"></b></span><input type="range" id="macVol" min="0" max="8" step="0.1" value="1.2"></div>
+      <div class="slider"><span>Nitrous oxide % <b id="macN2OV"></b></span><input type="range" id="macN2O" min="0" max="70" step="5" value="0"></div>
+      <div class="slider"><span>Patient age <b id="macAgeV"></b></span><input type="range" id="macAge" min="0" max="90" step="0.5" value="40"></div>
+      <div class="msg" id="macMsg"></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:18px">
+    <h3>Sort the factors (Box 7.1)</h3>
+    <p class="note" style="margin-top:0">Click a factor, then click the bin where it belongs.</p>
+    <div class="chips" id="macPool"></div>
+    <div class="bins">
+      <div class="bin dec" data-bin="dec"><h4>Decreases MAC</h4><div></div></div>
+      <div class="bin inc" data-bin="inc"><h4>Increases MAC</h4><div></div></div>
+      <div class="bin none" data-bin="none"><h4>No effect on MAC</h4><div></div></div>
+    </div>
+    <div class="btnrow"><button class="b" id="macReset">Reset sort</button></div>
+    <div class="msg" id="macSortMsg">0 sorted.</div>
+  </div>
+  <div class="try"><h3>Try this</h3><ol>
+    <li>Find the sevoflurane % that gives 1 MAC at age 40. Now set age to 6 months. How much more is needed?</li>
+    <li>Add 50% nitrous oxide. How much volatile can you remove and keep 1.3 MAC?</li>
+    <li>What happens to the chance of movement between 1.0 and 1.3 MAC? Why does a steep curve matter clinically?</li>
+  </ol></div>
+</section>
+
+<!-- 3 INDUCTION LAB -->
+<section class="tab" id="t-ind" data-title="3 · Induction Speed Lab">
+  <h2>What Speeds Up or Slows Down Induction</h2>
+  <p class="lede">Change one factor at a time and compare runs. The brain partial pressure is shown as MAC multiples. Switch between spontaneous and controlled ventilation to see the built-in safety loop.</p>
+  <div class="grid">
+    <div class="card">
+      <h3>Brain anesthetic level (MAC multiples)</h3>
+      <svg id="indChart" viewBox="0 0 720 380" role="img" aria-label="Brain MAC multiples over time, current run and previous run"></svg>
+      <div class="legend"><span><i style="background:var(--mag)"></i>Current run</span><span><i style="background:#b9a9b2"></i>Previous run</span><span><i style="background:var(--teal)"></i>Alveolar ventilation (right axis)</span></div>
+      <div class="stats" id="indStats"></div>
+      <div class="msg" id="indMsg"></div>
+    </div>
+    <div class="controls card">
+      <div class="slider"><span>Agent</span><select id="indAgent"></select></div>
+      <div class="slider"><span>Dialed concentration <b id="indDialV"></b></span><input type="range" id="indDial" min="0.5" max="8" step="0.5" value="3"></div>
+      <div class="slider"><span>Fresh gas flow (L/min) <b id="indFGFV"></b></span><input type="range" id="indFGF" min="0.5" max="10" step="0.5" value="6"></div>
+      <div class="slider"><span>Alveolar ventilation (L/min) <b id="indVAV"></b></span><input type="range" id="indVA" min="1" max="10" step="0.5" value="4"></div>
+      <div class="slider"><span>Cardiac output (L/min) <b id="indCOV"></b></span><input type="range" id="indCO" min="2" max="10" step="0.5" value="5"></div>
+      <label class="chk"><input type="checkbox" id="indSecond"> Add 70% nitrous oxide (second gas effect)</label>
+      <div class="seg" role="radiogroup" aria-label="Ventilation mode">
+        <button class="b sel" data-mode="ctrl">Controlled ventilation</button>
+        <button class="b" data-mode="spont">Spontaneous ventilation</button>
+      </div>
+      <div class="btnrow"><button class="b primary" id="indRun">Run 20 minutes</button><button class="b" id="indClear">Clear comparison</button></div>
+    </div>
+  </div>
+  <div class="try"><h3>Try this</h3><ol>
+    <li>Run isoflurane at 3%. Now overpressure to 5% and compare. Then drop fresh gas flow to 1 L/min.</li>
+    <li>Raise cardiac output to 9 L/min (anxious, hyperdynamic patient). Repeat with desflurane. Which agent is affected more?</li>
+    <li>Dial sevoflurane to 8% on controlled ventilation, then switch to spontaneous. Why does the brain level level off when the patient breathes on their own?</li>
+  </ol></div>
+</section>
+
+<!-- 4 NITROUS -->
+<section class="tab" id="t-n2o" data-title="4 · Nitrous Oxide Risks">
+  <h2>Nitrous Oxide: Closed Air Spaces and Diffusion Hypoxia</h2>
+  <p class="lede">Nitrous oxide is 34 times more soluble than nitrogen. It enters gas-filled spaces much faster than nitrogen can leave. Expandable spaces grow; rigid spaces build pressure. At emergence, nitrous floods back into the alveoli.</p>
+  <div class="grid2">
+    <div class="card">
+      <h3>Closed gas space</h3>
+      <div class="slider"><span>Space</span><select id="n2oSpace">
+        <option value="ptx">Pneumothorax (expandable)</option>
+        <option value="bowel">Obstructed bowel (expandable)</option>
+        <option value="cuff">ETT cuff filled with air (expandable)</option>
+        <option value="ear">Middle ear (rigid)</option>
+        <option value="head">Intracranial air (rigid)</option></select></div>
+      <div class="slider" style="margin-top:8px"><span>Inspired nitrous oxide <b id="n2oFV"></b></span><input type="range" id="n2oF" min="0" max="75" step="5" value="70"></div>
+      <div class="slider"><span>Minutes of exposure <b id="n2oTV"></b></span><input type="range" id="n2oT" min="0" max="120" step="1" value="0"></div>
+      <svg id="n2oPic" viewBox="0 0 520 260" role="img" aria-label="Closed space expanding or pressurizing"></svg>
+      <div class="stats" id="n2oStats"></div>
+      <div class="btnrow"><button class="b primary" id="n2oPlay">Play 0 → 120 min</button></div>
+    </div>
+    <div class="card">
+      <h3>Diffusion hypoxia at emergence</h3>
+      <p class="note" style="margin-top:0">After a nitrous oxide anesthetic, the nitrous is turned off at time 0.</p>
+      <div class="seg" role="radiogroup" aria-label="Gas after nitrous is stopped">
+        <button class="b sel" data-o2="0.21">Patient breathes room air</button>
+        <button class="b" data-o2="1">Give 100% oxygen</button>
+      </div>
+      <svg id="dhChart" viewBox="0 0 520 300" role="img" aria-label="Alveolar oxygen fraction after nitrous oxide is discontinued"></svg>
+      <div class="stats" id="dhStats"></div>
+      <div class="card quiz" id="q4" style="margin-top:12px;border:0;padding:0"></div>
+    </div>
+  </div>
+  <div class="try"><h3>Try this</h3><ol>
+    <li>At 70% nitrous, how long until a pneumothorax doubles? Compare 50%.</li>
+    <li>Why does the bowel expand more slowly than a pneumothorax?</li>
+    <li>Switch to the middle ear. Why does a rigid space show pressure instead of volume?</li>
+  </ol></div>
+</section>
+
+<!-- 5 THEORIES -->
+<section class="tab" id="t-the" data-title="5 · Theories of Anesthesia">
+  <h2>Theories of How Anesthesia Works</h2>
+  <p class="lede">Run an “experiment,” then see which theories the observation supports or challenges. Use the Meyer-Overton plot to see why lipid solubility predicts potency so well.</p>
+  <div class="grid2">
+    <div class="card">
+      <h3>Meyer-Overton: potency vs. lipid solubility</h3>
+      <svg id="moChart" viewBox="0 0 520 380" role="img" aria-label="Log-log plot of oil:gas coefficient against MAC"></svg>
+      <div class="msg" id="moMsg">Click a point to see its values. As oil:gas rises, MAC falls; MAC × oil:gas stays roughly constant.</div>
+    </div>
+    <div class="card">
+      <h3>Run an experiment</h3>
+      <div class="seg" id="expBtns"></div>
+      <div class="msg" id="expObs">Choose an experiment.</div>
+      <div class="tgrid" id="theories"></div>
+    </div>
+  </div>
+  <div class="try"><h3>Try this</h3><ol>
+    <li>Which single experiment challenges both membrane-based theories?</li>
+    <li>Which observation is the best support for the protein receptor hypothesis?</li>
+    <li>Why is decreased brain oxygen consumption not proof of the metabolic inhibition theory?</li>
+  </ol></div>
+</section>
+
+<footer>Content follows the NURS 733 Uptake and Distribution lecture (Nagelhout Chs. 7–8; Stoelting Ch. 4). The uptake model is a simplified multi-compartment teaching model; numbers are illustrative and not for clinical decision-making.</footer>
+</main>
+<script>
+(function(){
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const NS = "http://www.w3.org/2000/svg";
+const el = (tag, attrs = {}, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+const txt = (parent, x, y, s, attrs = {}) => { const t = el("text", { x, y, "font-size": 13, fill: "#6c6f7d", "font-family": "Segoe UI, Calibri, sans-serif", ...attrs }, parent); t.textContent = s; return t; };
+const fmt = (v, d = 1) => (Math.round(v * 10 ** d) / 10 ** d).toFixed(d);
+
+/* ---------------- tabs ---------------- */
+const tabs = $$("section.tab"), nav = $("#tabs");
+tabs.forEach((s, i) => { const b = document.createElement("button"); b.textContent = s.dataset.title; b.setAttribute("role", "tab");
+  b.onclick = () => { tabs.forEach(t => t.classList.remove("on")); $$("button", nav).forEach(x => x.setAttribute("aria-selected", "false")); s.classList.add("on"); b.setAttribute("aria-selected", "true"); };
+  nav.appendChild(b); if (!i) b.click(); });
+
+/* ---------------- agents & model ---------------- */
+const AG = {
+  des:  { name: "Desflurane",    color: "#1f6f78", lb: 0.42, br: 1.3, mu: 2.0, fat: 27, mac: 5.8 },
+  n2o:  { name: "Nitrous oxide", color: "#c98a1b", lb: 0.47, br: 1.1, mu: 1.2, fat: 2.3, mac: 105 },
+  sevo: { name: "Sevoflurane",   color: "#3d5a80", lb: 0.65, br: 1.7, mu: 3.1, fat: 48, mac: 2.0 },
+  iso:  { name: "Isoflurane",    color: "#8e2c5e", lb: 1.4,  br: 1.6, mu: 2.9, fat: 45, mac: 1.15 },
+  hal:  { name: "Halothane",     color: "#5e1a40", lb: 2.4,  br: 1.9, mu: 3.4, fat: 51, mac: 0.75 } };
+const GROUPS = [{ k: "br", f: 0.75, v: 6 }, { k: "mu", f: 0.19, v: 33 }, { k: "fat", f: 0.06, v: 14.5 }];
+const VL = 2.5, VC = 6;
+
+// Returns samples every 0.1 min. Partial pressures in % (vol%).
+function simulate(o) {
+  const a = AG[o.agent], dt = 0.01, T = o.T, out = [];
+  let Pc = o.fixedFI ? o.dial : 0, PA = 0, P = GROUPS.map(() => 0);
+  let n2o = o.second ? { Pc: 0, PA: 0, P: GROUPS.map(() => 0) } : null; const N = AG.n2o;
+  let va = o.VA;
+  for (let i = 0, t = 0; t <= T + 1e-9; i++, t = i * dt) {
+    const on = o.offAt == null || t < o.offAt;
+    const dial = on ? o.dial : 0;
+    // brain MAC (volatile + nitrous)
+    const macB = P[0] / a.mac + (n2o ? n2o.P[0] / N.mac : 0);
+    va = o.spont ? o.VA * Math.max(0, 1 - 0.55 * Math.max(0, macB - 0.25)) : o.VA;
+    if (i % 10 === 0) out.push({ t, PA, Pb: P[0], PI: o.fixedFI ? dial : Pc, macB, va });
+    const Q = o.CO;
+    const Pv = GROUPS.reduce((s, g, j) => s + g.f * P[j], 0);
+    const boost = n2o ? 1 + 0.35 * Math.exp(-t / 6) : 1;           // concentrating (second gas) effect, conceptual
+    const PI = o.fixedFI ? dial : Pc;
+    const dPA = (va * boost * (PI - PA) - Q * a.lb * (PA - Pv)) / VL;
+    if (!o.fixedFI) Pc += dt * (o.FGF * (dial - Pc) - va * (Pc - PA)) / VC;
+    GROUPS.forEach((g, j) => { P[j] += dt * (g.f * Q * (PA - P[j])) / (g.v * a[g.k]); });
+    PA += dt * dPA;
+    if (n2o) { const nd = on ? 70 : 0; const nPv = GROUPS.reduce((s, g, j) => s + g.f * n2o.P[j], 0);
+      const ndPA = (va * (n2o.Pc - n2o.PA) - Q * N.lb * (n2o.PA - nPv)) / VL;
+      n2o.Pc += dt * (o.FGF * (nd - n2o.Pc) - va * (n2o.Pc - n2o.PA)) / VC;
+      GROUPS.forEach((g, j) => { n2o.P[j] += dt * (g.f * Q * (n2o.PA - n2o.P[j])) / (g.v * N[g.k]); });
+      n2o.PA += dt * ndPA; }
+  }
+  return out;
+}
+
+/* ---------------- chart helper ---------------- */
+function chart(svg, { W = 720, H = 380, xmax, ymax, xl, yl, yfmt = v => v, xticks, yticks, right }) {
+  svg.innerHTML = ""; const m = { l: 58, r: right ? 58 : 18, t: 16, b: 46 };
+  const X = v => m.l + (v / xmax) * (W - m.l - m.r), Y = v => H - m.b - (v / ymax) * (H - m.t - m.b);
+  const g = el("g", {}, svg);
+  yticks.forEach(v => { el("line", { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), stroke: "#eee4ea" }, g); txt(g, m.l - 8, Y(v) + 4, yfmt(v), { "text-anchor": "end" }); });
+  xticks.forEach(v => { txt(g, X(v), H - m.b + 18, v, { "text-anchor": "middle" }); });
+  el("line", { x1: m.l, x2: W - m.r, y1: Y(0), y2: Y(0), stroke: "#b9a9b2" }, g);
+  txt(g, (m.l + W - m.r) / 2, H - 8, xl, { "text-anchor": "middle", fill: "#2b2d42" });
+  txt(g, 14, (m.t + H - m.b) / 2, yl, { "text-anchor": "middle", fill: "#2b2d42", transform: `rotate(-90 14 ${(m.t + H - m.b) / 2})` });
+  if (right) { const R = v => H - m.b - (v / right.max) * (H - m.t - m.b);
+    right.ticks.forEach(v => txt(g, W - m.r + 8, R(v) + 4, v, { fill: "#1f6f78" }));
+    txt(g, W - 12, (m.t + H - m.b) / 2, right.label, { "text-anchor": "middle", fill: "#1f6f78", transform: `rotate(90 ${W - 12} ${(m.t + H - m.b) / 2})` });
+    return { X, Y, R, g, m }; }
+  return { X, Y, g, m };
+}
+const path = (pts, X, Y) => pts.map((p, i) => (i ? "L" : "M") + X(p[0]).toFixed(1) + " " + Y(p[1]).toFixed(1)).join(" ");
+
+/* ---------------- quiz helper ---------------- */
+function quiz(box, q, opts, ans, why) {
+  box.innerHTML = `<h3>Quick check</h3><p style="margin:0 0 6px;font-size:15px">${q}</p>`;
+  const msg = document.createElement("div"); msg.className = "msg"; msg.style.display = "none";
+  opts.forEach((o, i) => { const b = document.createElement("button"); b.className = "b opt"; b.textContent = "ABCD"[i] + ". " + o;
+    b.onclick = () => { msg.style.display = "block"; msg.className = "msg " + (i === ans ? "good" : "badm"); msg.textContent = (i === ans ? "Correct. " : "Not quite. ") + why; }; box.appendChild(b); });
+  box.appendChild(msg);
+}
+
+/* =============== 1 SOLUBILITY =============== */
+(function () {
+  const sel = new Set(["des", "sevo", "iso"]); const chips = $("#solAgents"); let emerge = false;
+  Object.entries(AG).forEach(([k, a]) => { const c = document.createElement("button"); c.className = "chip" + (sel.has(k) ? " on" : ""); c.textContent = `${a.name} (${a.lb})`;
+    c.onclick = () => { sel.has(k) ? sel.delete(k) : sel.add(k); c.classList.toggle("on"); draw(); }; chips.appendChild(c);
+    const op = document.createElement("option"); op.value = k; op.textContent = `${a.name} (blood:gas ${a.lb})`; $("#spongeAgent").appendChild(op); });
+  $("#spongeAgent").value = "iso";
+  const base = { dial: 1, fixedFI: true, VA: 4, CO: 5, FGF: 6 };
+  function draw() {
+    const T = emerge ? 60 : 30, svg = $("#solChart");
+    const c = chart(svg, { xmax: T, ymax: 1, xl: emerge ? "Minutes (vaporizer off at 30 min)" : "Minutes", yl: emerge ? "FA/FI, then FA/FA at shut-off" : "FA/FI",
+      xticks: emerge ? [0, 10, 20, 30, 40, 50, 60] : [0, 5, 10, 15, 20, 25, 30], yticks: [0, 0.2, 0.4, 0.6, 0.8, 1], yfmt: v => v.toFixed(1) });
+    if (emerge) { el("line", { x1: c.X(30), x2: c.X(30), y1: c.Y(0), y2: c.Y(1), stroke: "#b4232f", "stroke-dasharray": "5 4" }, c.g); txt(c.g, c.X(30) + 6, c.Y(0.97), "Vaporizer off", { fill: "#b4232f" }); }
+    const leg = $("#solLegend"), st = $("#solStats"); leg.innerHTML = ""; st.innerHTML = "";
+    [...sel].forEach(k => { const a = AG[k], r = simulate({ ...base, agent: k, T, offAt: emerge ? 30 : null });
+      const off = r.find(p => p.t >= 30 - 1e-6); const FA30 = off ? off.PA : 1;
+      const pts = r.map(p => [p.t, !emerge || p.t < 30 ? p.PA : p.PA / FA30]);
+      el("path", { d: path(pts, c.X, c.Y), fill: "none", stroke: a.color, "stroke-width": 3 }, c.g);
+      leg.insertAdjacentHTML("beforeend", `<span><i style="background:${a.color}"></i>${a.name}</span>`);
+      const t50 = r.find(p => p.PA >= 0.5), t80 = r.find(p => p.PA >= 0.8);
+      let extra = ""; if (emerge) { const e = r.find(p => p.t > 30 && p.PA / FA30 <= 0.2); extra = `<br>80% fall: <b style="font-size:15px">${e ? fmt(e.t - 30) + " min" : "> 30 min"}</b>`; }
+      st.insertAdjacentHTML("beforeend", `<div class="stat"><small>${a.name}</small><span style="font-size:13px">FA/FI 0.5: <b style="font-size:15px">${t50 ? fmt(t50.t) + " min" : "> 30"}</b><br>FA/FI 0.8: <b style="font-size:15px">${t80 ? fmt(t80.t) + " min" : "> 30 min"}</b>${extra}</span></div>`); });
+  }
+  $("#solRun").onclick = () => { emerge = false; draw(); startSponge(); };
+  $("#solOff").onclick = () => { emerge = true; draw(); };
+  draw();
+  quiz($("#q1"), "Why does isoflurane reach FA/FI 0.8 more slowly than desflurane?", ["It is less potent", "Blood dissolves more of it, so alveolar partial pressure rises slowly", "It is more metabolized", "It needs a higher fresh gas flow"], 1,
+    "Isoflurane's blood:gas coefficient (1.4) is about 3× desflurane's (0.42). Blood acts as a reservoir, removing agent from the alveoli and slowing the rise of PA and Pbrain.");
+
+  // sponge animation
+  const sv = $("#sponge"); let parts = [], raf, t0;
+  function startSponge() {
+    cancelAnimationFrame(raf); sv.innerHTML = ""; const a = AG[$("#spongeAgent").value];
+    el("circle", { cx: 95, cy: 100, r: 70, fill: "#f4e8ef", stroke: "#8e2c5e", "stroke-width": 2 }, sv); txt(sv, 95, 190, "Alveolus", { "text-anchor": "middle", fill: "#5e1a40", "font-weight": 700 });
+    el("rect", { x: 200, y: 30, width: 300, height: 140, rx: 12, fill: "#fbeef2", stroke: "#b4232f", "stroke-width": 2 }, sv); txt(sv, 350, 190, `Blood (blood:gas ${a.lb})`, { "text-anchor": "middle", fill: "#b4232f", "font-weight": 700 });
+    el("rect", { x: 540, y: 30, width: 160, height: 140, rx: 12, fill: "#e8f3f4", stroke: "#1f6f78", "stroke-width": 2 }, sv); txt(sv, 620, 190, "Brain", { "text-anchor": "middle", fill: "#1f6f78", "font-weight": 700 });
+    const bar = el("rect", { x: 690, y: 170, width: 6, height: 0, fill: "#1f6f78" }, sv);
+    const lbl = txt(sv, 620, 22, "", { "text-anchor": "middle", fill: "#2b2d42", "font-weight": 700 });
+    parts = []; for (let i = 0; i < 90; i++) { const c = el("circle", { r: 4.5, fill: a.color }, sv); const ang = Math.random() * 6.28, rr = Math.random() * 55;
+      parts.push({ c, x: 95 + Math.cos(ang) * rr, y: 100 + Math.sin(ang) * rr, st: 0, delay: i * 55 + Math.random() * 200, tx: 0, ty: 0 }); }
+    const pDis = a.lb / (a.lb + 0.45); t0 = performance.now(); let brainN = 0;
+    function frame(now) { const el_ = now - t0;
+      parts.forEach(p => {
+        if (p.st === 0 && el_ > p.delay) { p.st = 1; p.tx = 215 + Math.random() * 270; p.ty = 45 + Math.random() * 110; }
+        else if (p.st === 1 && Math.hypot(p.tx - p.x, p.ty - p.y) < 3) { if (Math.random() < pDis) { p.st = 3; p.c.setAttribute("fill-opacity", 0.35); p.c.setAttribute("r", 3.5); } else { p.st = 2; p.tx = 555 + Math.random() * 120; p.ty = 45 + Math.random() * 110; } }
+        else if (p.st === 2 && Math.hypot(p.tx - p.x, p.ty - p.y) < 3) { p.st = 4; brainN++; }
+        if (p.st === 1 || p.st === 2) { p.x += (p.tx - p.x) * 0.06; p.y += (p.ty - p.y) * 0.06; }
+        p.c.setAttribute("cx", p.x.toFixed(1)); p.c.setAttribute("cy", p.y.toFixed(1)); });
+      const h = Math.min(140, brainN * 140 / 90); bar.setAttribute("y", 170 - h); bar.setAttribute("height", h);
+      lbl.textContent = `Reached brain: ${brainN} of 90`;
+      if (el_ < 9000) raf = requestAnimationFrame(frame); }
+    raf = requestAnimationFrame(frame);
+  }
+  $("#spongeAgent").onchange = startSponge; startSponge();
+})();
+
+/* =============== 2 MAC =============== */
+(function () {
+  ["sevo", "iso", "des"].forEach(k => { const o = document.createElement("option"); o.value = k; o.textContent = `${AG[k].name} (MAC40 ${AG[k].mac}%)`; $("#macAgent").appendChild(o); });
+  const ageF = age => { const pts = [[0, 1.4], [0.5, 1.7], [1, 1.5], [3, 1.35], [10, 1.2]];
+    if (age >= 10) return Math.pow(10, -0.00269 * (age - 40));
+    for (let i = 1; i < pts.length; i++) if (age <= pts[i][0]) { const [a0, f0] = pts[i - 1], [a1, f1] = pts[i]; return f0 + (f1 - f0) * (age - a0) / (a1 - a0); } };
+  const pNoMove = x => 1 / (1 + Math.exp(-Math.log(19) / 0.3 * (x - 1)));
+  function upd() {
+    const k = $("#macAgent").value, a = AG[k], v = +$("#macVol").value, n = +$("#macN2O").value, age = +$("#macAge").value, f = ageF(age);
+    $("#macVolV").textContent = v.toFixed(1) + "%"; $("#macN2OV").textContent = n + "%";
+    $("#macAgeV").textContent = age < 1 ? Math.round(age * 12) + " months" : age < 2 ? age.toFixed(1) + " yr" : Math.round(age) + " yr";
+    const mv = v / (a.mac * f), mn = n / (105 * f), tot = mv + mn, p = pNoMove(tot);
+    const c = chart($("#macChart"), { W: 720, H: 340, xmax: 2, ymax: 100, xl: "Total alveolar concentration (MAC multiples, age-adjusted)", yl: "% not moving with incision", xticks: [0, 0.5, 1, 1.3, 1.5, 2], yticks: [0, 25, 50, 75, 95, 100] });
+    const pts = []; for (let x = 0; x <= 2.001; x += 0.02) pts.push([x, 100 * pNoMove(x)]);
+    [[1, "1 MAC"], [1.3, "1.3 MAC"]].forEach(([x, l]) => { el("line", { x1: c.X(x), x2: c.X(x), y1: c.Y(0), y2: c.Y(100), stroke: "#d8c7d0", "stroke-dasharray": "4 4" }, c.g); });
+    el("path", { d: path(pts, c.X, c.Y), fill: "none", stroke: "#8e2c5e", "stroke-width": 3 }, c.g);
+    const xm = Math.min(tot, 2); el("circle", { cx: c.X(xm), cy: c.Y(100 * pNoMove(xm)), r: 9, fill: "#1f6f78", stroke: "#fff", "stroke-width": 3 }, c.g);
+    if (mn > 0) { el("rect", { x: c.X(0), y: c.Y(100) - 2, width: c.X(Math.min(mn, 2)) - c.X(0), height: 8, fill: "#c98a1b" }, c.g);
+      el("rect", { x: c.X(Math.min(mn, 2)), y: c.Y(100) - 2, width: c.X(Math.min(tot, 2)) - c.X(Math.min(mn, 2)), height: 8, fill: a.color }, c.g); }
+    $("#macStats").innerHTML = [["Age-adjusted MAC of " + a.name, (a.mac * f).toFixed(2) + "%"], ["From " + a.name, mv.toFixed(2) + " MAC"], ["From nitrous oxide", mn.toFixed(2) + " MAC"], ["Total", tot.toFixed(2) + " MAC"], ["Not moving", Math.round(100 * p) + "%"]]
+      .map(([l, b], i) => `<div class="stat${i === 4 ? (p >= 0.95 ? " nrm" : p < 0.5 ? " abn" : "") : ""}"><small>${l}</small><b>${b}</b></div>`).join("");
+    const m = $("#macMsg"); m.className = "msg " + (p >= 0.95 ? "good" : p < 0.5 ? "badm" : "");
+    m.textContent = tot < 1 ? "Below 1 MAC: more than half of patients would move with incision." : tot < 1.3 ? "Between 1 and 1.3 MAC: most patients still; the curve is steep here." : "At or above 1.3 MAC: about 95% or more of patients will not move.";
+  }
+  $$("#t-mac input, #t-mac select").forEach(i => i.oninput = upd); upd();
+
+  // sorting
+  const F = [["Hypothermia", "dec"], ["Increasing age", "dec"], ["Preoperative sedatives", "dec"], ["α2-agonists", "dec"], ["Acute alcohol ingestion", "dec"], ["Opioids", "dec"], ["Pregnancy", "dec"], ["Lidocaine", "dec"], ["Hypoxia", "dec"], ["MAP < 40 mm Hg", "dec"], ["Hyponatremia", "dec"], ["Lithium", "dec"],
+             ["Age 6 months", "inc"], ["Hyperthermia (< 42°C)", "inc"], ["Hypernatremia", "inc"], ["Chronic alcohol abuse", "inc"], ["Cocaine", "inc"], ["Acute amphetamines", "inc"], ["Ephedrine", "inc"], ["Red hair", "inc"],
+             ["Duration of anesthesia", "none"], ["Gender", "none"], ["Height / weight", "none"], ["Hyperthyroidism", "none"]];
+  let picked = null, done = 0, miss = 0;
+  function reset() { const pool = $("#macPool"); pool.innerHTML = ""; $$(".bin > div").forEach(d => d.innerHTML = ""); done = miss = 0; picked = null;
+    const order = F.map((f, i) => [f, (i * 7919) % 24]).sort((a, b) => a[1] - b[1]).map(x => x[0]);
+    order.forEach(([n, k]) => { const c = document.createElement("button"); c.className = "chip"; c.textContent = n; c.dataset.k = k;
+      c.onclick = () => { if (c.classList.contains("right")) return; $$(".chip.on", pool).forEach(x => x.classList.remove("on")); c.classList.add("on"); c.classList.remove("wrong"); picked = c; $$(".bin").forEach(b => b.classList.add("ready")); };
+      pool.appendChild(c); });
+    $("#macSortMsg").textContent = "0 of 24 sorted."; $("#macSortMsg").className = "msg"; }
+  $$(".bin").forEach(b => b.onclick = () => { if (!picked) return; const ok = picked.dataset.k === b.dataset.bin; $$(".bin").forEach(x => x.classList.remove("ready"));
+    if (ok) { picked.classList.remove("on"); picked.classList.add("right"); $("div", b).appendChild(picked); done++; } else { picked.classList.remove("on"); picked.classList.add("wrong"); miss++; }
+    const m = $("#macSortMsg"); m.textContent = ok ? `Correct. ${done} of 24 sorted.` : `Not that bin. Try again. (${done} of 24 sorted)`; m.className = "msg " + (ok ? "good" : "badm");
+    if (done === 24) { m.textContent = `All 24 sorted with ${miss} miss${miss === 1 ? "" : "es"}.`; m.className = "msg good"; } picked = null; });
+  $("#macReset").onclick = reset; reset();
+})();
+
+/* =============== 3 INDUCTION LAB =============== */
+(function () {
+  ["sevo", "iso", "des", "hal"].forEach(k => { const o = document.createElement("option"); o.value = k; o.textContent = AG[k].name; $("#indAgent").appendChild(o); });
+  $("#indAgent").value = "iso"; let mode = "ctrl", prev = null, cur = null;
+  $$("#t-ind [data-mode]").forEach(b => b.onclick = () => { mode = b.dataset.mode; $$("#t-ind [data-mode]").forEach(x => x.classList.toggle("sel", x === b)); });
+  const lab = () => { $("#indDialV").textContent = $("#indDial").value + "%"; $("#indFGFV").textContent = $("#indFGF").value; $("#indVAV").textContent = $("#indVA").value; $("#indCOV").textContent = $("#indCO").value; };
+  $$("#t-ind input[type=range]").forEach(i => i.oninput = lab); lab();
+  function run() {
+    const o = { agent: $("#indAgent").value, dial: +$("#indDial").value, FGF: +$("#indFGF").value, VA: +$("#indVA").value, CO: +$("#indCO").value, second: $("#indSecond").checked, spont: mode === "spont", T: 20 };
+    if (cur) prev = cur; cur = { r: simulate(o), o };
+    draw(); }
+  function draw() {
+    const c = chart($("#indChart"), { xmax: 20, ymax: 3, xl: "Minutes", yl: "Brain level (MAC multiples)", xticks: [0, 5, 10, 15, 20], yticks: [0, 0.5, 1, 1.3, 2, 2.5, 3], yfmt: v => v,
+      right: { max: 12, ticks: [0, 4, 8, 12], label: "Alveolar ventilation (L/min)" } });
+    [[1, "1 MAC"], [1.3, "1.3 MAC (95% still)"], [2.5, "Deep: risk of CV depression"]].forEach(([y, l]) => { el("line", { x1: c.X(0), x2: c.X(20), y1: c.Y(y), y2: c.Y(y), stroke: y > 2 ? "#f2b6bb" : "#d8c7d0", "stroke-dasharray": "5 4" }, c.g); txt(c.g, c.X(20) - 4, c.Y(y) - 5, l, { "text-anchor": "end", "font-size": 11 }); });
+    if (prev) el("path", { d: path(prev.r.map(p => [p.t, Math.min(3, p.macB)]), c.X, c.Y), fill: "none", stroke: "#b9a9b2", "stroke-width": 3 }, c.g);
+    if (!cur) return;
+    el("path", { d: path(cur.r.map(p => [p.t, p.va]), c.X, c.R), fill: "none", stroke: "#1f6f78", "stroke-width": 2, "stroke-dasharray": "6 4" }, c.g);
+    el("path", { d: path(cur.r.map(p => [p.t, Math.min(3, p.macB)]), c.X, c.Y), fill: "none", stroke: "#8e2c5e", "stroke-width": 3.5 }, c.g);
+    const r = cur.r, t1 = r.find(p => p.macB >= 1), t13 = r.find(p => p.macB >= 1.3), end = r[r.length - 1], peak = Math.max(...r.map(p => p.macB));
+    const pr = prev ? prev.r.find(p => p.macB >= 1) : null;
+    $("#indStats").innerHTML = [["Time to 1 MAC (brain)", t1 ? fmt(t1.t) + " min" : "not reached"], ["Time to 1.3 MAC", t13 ? fmt(t13.t) + " min" : "not reached"], ["Brain level at 20 min", fmt(end.macB, 2) + " MAC"], ["Previous run to 1 MAC", prev ? (pr ? fmt(pr.t) + " min" : "not reached") : "—"]]
+      .map(([l, b]) => `<div class="stat"><small>${l}</small><b>${b}</b></div>`).join("");
+    const m = $("#indMsg"); const o = cur.o;
+    if (o.spont && peak > 1.3) { m.className = "msg good"; m.textContent = `Spontaneous ventilation: as the brain level rose, ventilation fell to ${fmt(Math.min(...r.map(p => p.va)))} L/min, cutting delivery. The brain level self-limits near ${fmt(end.macB, 1)} MAC. This protective loop is lost on controlled ventilation.`; }
+    else if (!o.spont && peak > 2.5) { m.className = "msg badm"; m.textContent = `Controlled ventilation keeps delivering agent regardless of depth: the brain level reached ${fmt(peak, 1)} MAC. Decrease to a maintenance concentration once the patient is induced.`; }
+    else { m.className = "msg"; m.textContent = o.second ? "Second gas effect on: nitrous oxide's rapid uptake concentrates the volatile in the alveoli, and nitrous adds its own MAC." : "Compare with the previous run (gray). Change one factor at a time."; }
+  }
+  $("#indRun").onclick = run; $("#indClear").onclick = () => { prev = null; draw(); }; run();
+})();
+
+/* =============== 4 NITROUS =============== */
+(function () {
+  const SP = { ptx: { name: "Pneumothorax", tau: 15, type: "vol" }, bowel: { name: "Bowel gas", tau: 150, type: "vol" }, cuff: { name: "ETT cuff", tau: 25, type: "vol" },
+               ear: { name: "Middle ear", tau: 20, type: "pr", max: 40, unit: "cm H₂O" }, head: { name: "Intracranial air", tau: 15, type: "pr", max: 25, unit: "mm Hg" } };
+  let playing = null;
+  function upd() {
+    const s = SP[$("#n2oSpace").value], F = +$("#n2oF").value / 100, t = +$("#n2oT").value; $("#n2oFV").textContent = Math.round(F * 100) + "%"; $("#n2oTV").textContent = t + " min";
+    const frac = 1 - Math.exp(-t / s.tau), svg = $("#n2oPic"); svg.innerHTML = "";
+    if (s.type === "vol") {
+      const eq = 1 / (1 - Math.min(F, 0.95)), V = 1 + (eq - 1) * frac, r0 = 38, r = r0 * Math.sqrt(V);
+      el("rect", { x: 20, y: 15, width: 480, height: 230, rx: 26, fill: "#fbf3f7", stroke: "#d8c7d0", "stroke-width": 2 }, svg);
+      el("circle", { cx: 260, cy: 130, r: r0, fill: "none", stroke: "#b9a9b2", "stroke-dasharray": "5 4", "stroke-width": 2 }, svg);
+      el("circle", { cx: 260, cy: 130, r: Math.min(r, 112), fill: "#c98a1b", "fill-opacity": 0.35, stroke: "#c98a1b", "stroke-width": 3 }, svg);
+      txt(svg, 260, 135, s.name, { "text-anchor": "middle", fill: "#5e1a40", "font-weight": 700, "font-size": 15 });
+      const dbl = F > 0 ? (() => { const need = 1 / (eq - 1); return need < 1 ? -s.tau * Math.log(1 - need) : null; })() : null;
+      $("#n2oStats").innerHTML = `<div class="stat ${V >= 2 ? "abn" : ""}"><small>Volume vs. start</small><b>${fmt(V, 2)}×</b></div><div class="stat"><small>Equilibrium volume at ${Math.round(F * 100)}%</small><b>${fmt(eq, 1)}×</b></div><div class="stat"><small>Time to double</small><b>${dbl ? fmt(dbl, 0) + " min" : "does not double"}</b></div>`;
+    } else {
+      const P = s.max * (F / 0.7) * frac;
+      el("circle", { cx: 260, cy: 130, r: 95, fill: "#f4e8ef", stroke: "#5e1a40", "stroke-width": 8 }, svg);
+      const ang = -210 + 240 * Math.min(1, P / (s.max * 1.1)), rad = ang * Math.PI / 180;
+      for (let i = 0; i <= 10; i++) { const a = (-210 + 24 * i) * Math.PI / 180; el("line", { x1: 260 + 72 * Math.cos(a), y1: 130 + 72 * Math.sin(a), x2: 260 + 84 * Math.cos(a), y2: 130 + 84 * Math.sin(a), stroke: i > 7 ? "#b4232f" : "#8e2c5e", "stroke-width": 3 }, svg); }
+      el("line", { x1: 260, y1: 130, x2: 260 + 66 * Math.cos(rad), y2: 130 + 66 * Math.sin(rad), stroke: "#b4232f", "stroke-width": 5, "stroke-linecap": "round" }, svg);
+      el("circle", { cx: 260, cy: 130, r: 8, fill: "#5e1a40" }, svg); txt(svg, 260, 180, s.name + " (rigid)", { "text-anchor": "middle", fill: "#5e1a40", "font-weight": 700, "font-size": 15 });
+      $("#n2oStats").innerHTML = `<div class="stat ${P > s.max * 0.5 ? "abn" : ""}"><small>Pressure rise</small><b>+${fmt(P, 0)} ${s.unit}</b></div><div class="stat"><small>Volume</small><b>Cannot expand</b></div>`;
+    }
+  }
+  $$("#t-n2o input, #n2oSpace").forEach(i => i.oninput = upd); upd();
+  $("#n2oPlay").onclick = () => { clearInterval(playing); let t = 0; $("#n2oT").value = 0; playing = setInterval(() => { t += 2; $("#n2oT").value = t; upd(); if (t >= 120) clearInterval(playing); }, 60); };
+
+  let FI = 0.21;
+  function dh() {
+    const c = chart($("#dhChart"), { W: 520, H: 300, xmax: 12, ymax: FI === 1 ? 1 : 0.25, xl: "Minutes after nitrous oxide is turned off", yl: "Alveolar O₂ fraction", xticks: [0, 2, 4, 6, 8, 10, 12], yticks: FI === 1 ? [0, 0.2, 0.4, 0.6, 0.8, 1] : [0, 0.05, 0.1, 0.15, 0.2, 0.25], yfmt: v => v.toFixed(FI === 1 ? 1 : 2) });
+    const D = t => 1.15 * (Math.exp(-t / 2.2) - Math.exp(-t / 0.25)) * 0.42;
+    const pts = []; for (let t = 0; t <= 12.001; t += 0.1) pts.push([t, FI * (1 - D(t))]);
+    el("line", { x1: c.X(0), x2: c.X(12), y1: c.Y(FI), y2: c.Y(FI), stroke: "#d8c7d0", "stroke-dasharray": "5 4" }, c.g); txt(c.g, c.X(12) - 4, c.Y(FI) - 6, `Inspired O₂ ${FI === 1 ? "100%" : "21%"}`, { "text-anchor": "end", "font-size": 11 });
+    el("path", { d: path(pts, c.X, c.Y), fill: "none", stroke: FI === 1 ? "#1f6f78" : "#b4232f", "stroke-width": 3.5 }, c.g);
+    const nad = Math.min(...pts.map(p => p[1])), PAO2 = nad * 713 - 50;
+    $("#dhStats").innerHTML = `<div class="stat ${PAO2 < 60 ? "abn" : "nrm"}"><small>Lowest alveolar O₂ fraction</small><b>${fmt(nad, 2)}</b></div><div class="stat ${PAO2 < 60 ? "abn" : "nrm"}"><small>Approx. lowest PAO₂</small><b>${Math.round(PAO2)} mm Hg</b></div>`;
+  }
+  $$("#t-n2o [data-o2]").forEach(b => b.onclick = () => { FI = +b.dataset.o2; $$("#t-n2o [data-o2]").forEach(x => x.classList.toggle("sel", x === b)); dh(); }); dh();
+  quiz($("#q4"), "Why does a pneumothorax enlarge under 70% nitrous oxide?", ["Nitrous oxide raises airway pressure", "Nitrous oxide enters the space far faster than nitrogen can leave", "Nitrous oxide is less soluble than nitrogen", "Nitrous oxide causes bronchospasm"], 1,
+    "Nitrous oxide is 34 times more soluble than nitrogen, so it diffuses into the gas space much faster than nitrogen diffuses out. Expandable spaces enlarge; rigid spaces build pressure.");
+})();
+
+/* =============== 5 THEORIES =============== */
+(function () {
+  const P = [["Nitrous oxide", 1.4, 105, "#c98a1b"], ["Desflurane", 18.7, 5.8, "#1f6f78"], ["Sevoflurane", 50, 2, "#3d5a80"], ["Isoflurane", 99, 1.15, "#8e2c5e"], ["Halothane", 224, 0.75, "#5e1a40"]];
+  const svg = $("#moChart"), W = 520, H = 380, m = { l: 62, r: 18, t: 16, b: 48 };
+  const lx = v => Math.log10(v), X = v => m.l + (lx(v) - 0) / (lx(500) - 0) * (W - m.l - m.r), Y = v => H - m.b - (lx(v) - lx(0.5)) / (lx(200) - lx(0.5)) * (H - m.t - m.b);
+  [1, 10, 100, 500].forEach(v => txt(svg, X(v), H - m.b + 18, v, { "text-anchor": "middle" }));
+  [0.5, 1, 2, 5, 10, 20, 50, 100].forEach(v => { el("line", { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), stroke: "#eee4ea" }, svg); txt(svg, m.l - 8, Y(v) + 4, v, { "text-anchor": "end" }); });
+  txt(svg, (m.l + W) / 2, H - 8, "Oil:gas partition coefficient (log scale)", { "text-anchor": "middle", fill: "#2b2d42" });
+  txt(svg, 14, H / 2, "MAC % (log scale)", { "text-anchor": "middle", fill: "#2b2d42", transform: `rotate(-90 14 ${H / 2})` });
+  el("line", { x1: X(1), y1: Y(130), x2: X(260), y2: Y(0.5), stroke: "#d8c7d0", "stroke-width": 2, "stroke-dasharray": "6 5" }, svg);
+  P.forEach(([n, og, mac, col]) => { const g = el("g", { style: "cursor:pointer", tabindex: 0, role: "button", "aria-label": n }, svg);
+    el("circle", { cx: X(og), cy: Y(mac), r: 11, fill: col, stroke: "#fff", "stroke-width": 3 }, g); txt(g, og > 150 ? X(og) - 15 : X(og) + 15, Y(mac) - 12, n, { fill: col, "font-weight": 700, "text-anchor": og > 150 ? "end" : "start" });
+    const show = () => { $("#moMsg").textContent = `${n}: oil:gas ${og}, MAC ${mac}%. MAC × oil:gas ≈ ${Math.round(og * mac)}. Higher lipid solubility = lower MAC = greater potency.`; };
+    g.onclick = show; g.onkeydown = e => { if (e.key === "Enter" || e.key === " ") show(); }; });
+
+  const TH = [["mo", "Meyer-Overton", "Potency correlates with lipid solubility; a critical number of molecules dissolve in hydrophobic sites."],
+              ["cv", "Critical volume", "Dissolved molecules expand the membrane and compress ion channels."],
+              ["lps", "Lateral phase separation", "Agents keep membrane around channels fluid so channels stay open."],
+              ["pr", "Protein receptor", "Hydrophobic regions of specific CNS proteins change conformation."],
+              ["mi", "Metabolic inhibition", "Agents inhibit oxidative enzymes, lowering brain O₂ consumption."],
+              ["ut", "Unitary theory", "All agents share one mode of action on a specific molecular structure."]];
+  const tg = $("#theories"); TH.forEach(([k, n, d]) => tg.insertAdjacentHTML("beforeend", `<div class="theory" id="th-${k}"><h4>${n}</h4><p>${d}</p><div class="verdict n"></div></div>`));
+  const EX = [
+    ["Plot potency vs. oil:gas", "Across agents, MAC falls as oil:gas rises; MAC × oil:gas stays roughly constant (see plot).", { mo: "s", cv: "s", ut: "s" }],
+    ["Combine 0.5 MAC + 0.5 MAC", "Two different agents at 0.5 MAC each produce 1 MAC: the effects add.", { mo: "s", ut: "s", cv: "s" }],
+    ["Raise body temperature", "Warming expands and fluidizes membranes, yet MAC increases and hyperthermia does not make patients more sensitive.", { cv: "c", lps: "c" }],
+    ["Give a lipid-soluble non-anesthetic", "Some highly lipid-soluble compounds expand membranes but produce no anesthesia.", { mo: "c", cv: "c", pr: "s" }],
+    ["Give an α2-agonist (clonidine)", "MAC decreases through a specific receptor.", { pr: "s" }],
+    ["Steep dose–response", "1 MAC = 50% and 1.3 MAC = 95% non-movement: a steep curve typical of receptor-mediated effects.", { pr: "s" }],
+    ["Measure brain O₂ use and ATP", "O₂ consumption falls, but ATP does not, and inhibiting mitochondria needs greater-than-clinical doses. Lower O₂ use is a consequence of CNS depression, not a cause.", { mi: "c" }],
+    ["Search for one anesthetic gene", "Genetic data fail to identify a single protein or channel responsible for anesthesia; diverse agents suggest non-specific sites.", { ut: "c", pr: "c" }]];
+  const L = { s: ["s", "Supports"], c: ["c", "Challenges"] };
+  EX.forEach(([n, obs, v]) => { const b = document.createElement("button"); b.className = "b"; b.textContent = n;
+    b.onclick = () => { $$("#expBtns .b").forEach(x => x.classList.toggle("sel", x === b)); $("#expObs").textContent = "Observation: " + obs;
+      TH.forEach(([k]) => { const d = $(`#th-${k} .verdict`); const r = v[k]; d.className = "verdict " + (r ? L[r][0] : "n"); d.textContent = r ? L[r][1] + " this theory" : "Not directly tested"; }); };
+    $("#expBtns").appendChild(b); });
+})();
+})();
+</script>
+</body>
+</html>
